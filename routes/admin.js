@@ -6,13 +6,21 @@ const rootDir = require('../util/path'); // to replace __dirname to start the fi
 
 const router = express.Router();
 
+const products = [];
+
+// /admin/add-product => GET
 router.get('/add-product', (req, res, next) => {
-  res.sendFile(path.join(rootDir, 'views', 'add-product.html'));
+  res.render('add-product', { pageTitle: 'Add Product', path: '/admin/add-product', formsCSS: true, productCSS: true, activeAddProduct: true });
+  // res.sendFile(path.join(rootDir, 'views', 'add-product.html'));
 }); // had to update action with the /admin because of the filtering in app.js
 
 router.post('/add-product', (req, res, next) => {
-  console.log(req.body); // by default body doesn't parse
+  products.push({ title: req.body.title });
   res.redirect('/');
 });
 
-module.exports = router; // this exports it so we can import in app.js
+
+exports.routes = router;
+exports.products = products;
+// module.exports = router; 
+// this exports it so we can import in app.js
