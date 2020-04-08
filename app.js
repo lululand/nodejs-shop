@@ -8,8 +8,6 @@ const errorController = require('./controllers/404');
 const app = express();
 
 app.set('view engine', 'ejs'); 
-
-// app.set('view engine', 'pug'); // express allows us to use templating engines. trying to add pug to node by itself would be more complicated
 app.set('views', 'views'); // this is the default, so you only need to include this if you have your views in a different dir 
 
 const adminRoutes = require('./routes/admin'); // imports the admin.js, adminRoutes is a valid middleware function
