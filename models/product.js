@@ -3,24 +3,21 @@ const path = require('path');
 
 const p = path.join(
   path.dirname(process.mainModule.filename),
-  'data', 
+  'data',
   'products.json'
-  );
+);
 
-const getProductsFromFile = cb => { // helper function which recieves a callback which it executes once it's done reading the file. 
+const getProductsFromFile = cb => {
   fs.readFile(p, (err, fileContent) => {
     if (err) {
       cb([]);
     } else {
-    cb(JSON.parse(fileContent));
+      cb(JSON.parse(fileContent));
     }
   });
-}
+};
 
-// a function to look through the array and find the product to edit? 
-
-
-module.exports = class Products {
+module.exports = class Product {
   constructor(title, imageUrl, description, price) {
     this.title = title;
     this.imageUrl = imageUrl;
@@ -29,19 +26,23 @@ module.exports = class Products {
   }
 
   save() {
+    this.id = Math.random().toString();
     getProductsFromFile(products => {
       products.push(this);
-      fs.writeFile(p, JSON.stringify(products), (err) => {
+      fs.writeFile(p, JSON.stringify(products), err => {
         console.log(err);
       });
-    }); 
+    });
   }
 
-  // edit() {
-
-  // }
-
   static fetchAll(cb) {
-   getProductsFromFile(cb);
+    getProductsFromFile(cb);
+  }
+
+  static findById(id, cb) {
+    getProductsFromFile(products => {
+      const product = products.find(p => p.id === id);
+      cb(product);
+    });
   }
 };
