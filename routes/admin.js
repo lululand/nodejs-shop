@@ -14,6 +14,10 @@ router.get('/products', adminController.getProducts);
 
 router.post('/add-product', adminController.postAddProduct);
 
-router.get('/edit-product/:productId', adminController.getEditProduct);
+router.get('/edit-product/:productId', adminController.getEditProduct); // dynamic path segment indicated with a :
+
+router.post('/edit-product', adminController.postEditProduct); 
+
+router.post('/delete-product', adminController.postDeleteProduct); 
 
 module.exports = router;
