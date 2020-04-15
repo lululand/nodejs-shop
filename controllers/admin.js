@@ -10,12 +10,16 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const imageURL = req.body.imageURL;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product(null, title, imageUrl, description, price);
-  product.save(); // added null with the change to the product model
-  res.redirect("/");
+  const product = new Product(null, title, imageURL, description, price);
+  product
+    .save()
+    .then(() => {
+      res.redirect("/"); // only redirect once the insert completed
+    })
+    .catch((err) => console.log(err)); // added null with the change to the product model
 };
 
 exports.getEditProduct = (req, res, next) => {
@@ -44,13 +48,13 @@ exports.postEditProduct = (req, res, next) => {
   const prodId = req.body.productId; // we can access the productId from the edit-product page via the hidden input field that we named productId
   // 2- create a new product instance and populate it with that info
   const updatedTitle = req.body.title;
-  const updatedImageUrl = req.body.imageUrl;
+  const updatedImageURL = req.body.imageURL;
   const updatedPrice = req.body.price;
   const updatedDescription = req.body.description;
   const updatedProduct = new Product(
     prodId,
     updatedTitle,
-    updatedImageUrl,
+    updatedImageURL,
     updatedPrice,
     updatedDescription
   );
@@ -68,11 +72,13 @@ exports.postDeleteProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll((products) => {
-    res.render("admin/products", {
-      prods: products,
-      pageTitle: "Admin Products",
-      path: "/admin/products",
-    });
-  });
+  Product.fetchAll()
+    .then(([rows]) => {
+      res.render("admin/products", {
+        prods: rows,
+        pageTitle: "Admin Products",
+        path: "/admin/products",
+      });
+    })
+    .catch((err) => console.log(err));
 };
