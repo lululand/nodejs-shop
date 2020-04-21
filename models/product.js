@@ -1,33 +1,76 @@
-const Sequelize = require("sequelize").Sequelize;
+const getDb = require("../util/database").getDb;
 
-const sequelize = require("../util/database"); // importing what we exported in our database.js. this is a fully configured sequelize env
-
-const Product = sequelize.define("product", {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    allowNull: false,
-    primaryKey: true,
-  },
-  title: Sequelize.STRING,
-  price: {
-    type: Sequelize.DOUBLE,
-    allowNull: false,
-  },
-  imageUrl: {
-    type: Sequelize.STRING,
-    allowNull: false,
-  },
-  description: {
-    type: Sequelize.STRING,
-    allowNull: false,
+class Product {
+  constructor(title, price, description, imageUrl) {
+    this.title = title;
+    this.price = price;
+    this.description = description;
+    this.imageUrl = imageUrl;
   }
-});
+
+  save() {
+    const db = getDb(); // this gives us our connection which allows us to interact with the db
+    return db
+      .collection("products")
+      .insertOne(this)
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((err) => {
+        console.log(err);
+      }); // table ;equivalent - if it doesn't exist yet, mongodb will create it the first time we insert data
+  }
+
+  static fetchAll() {
+    const db = getDb();
+    return db
+      .collection("products")
+      .find()
+      .toArray()
+      .then(products => {
+        console.log(products);
+        return products;
+      })
+      .catch((err) => {
+        console.log(err);
+      }); // find is from mongodb. to array- getsall docs and turns them into an array
+  }
+}
 
 module.exports = Product;
 
 // **************************************************
-// ********** below was without sequelize **********
+// ********** with sequelize **********
+// **************************************************
+
+// const Sequelize = require("sequelize").Sequelize;
+
+// const sequelize = require("../util/database"); // importing what we exported in our database.js. this is a fully configured sequelize env
+
+// const Product = sequelize.define("product", {
+//   id: {
+//     type: Sequelize.INTEGER,
+//     autoIncrement: true,
+//     allowNull: false,
+//     primaryKey: true,
+//   },
+//   title: Sequelize.STRING,
+//   price: {
+//     type: Sequelize.DOUBLE,
+//     allowNull: false,
+//   },
+//   imageUrl: {
+//     type: Sequelize.STRING,
+//     allowNull: false,
+//   },
+//   description: {
+//     type: Sequelize.STRING,
+//     allowNull: false,
+//   },
+// });
+
+// **************************************************
+// ********** without sequelize **********
 // **************************************************
 // const db = require('../util/database.js');
 // const Cart = require("./cart");
