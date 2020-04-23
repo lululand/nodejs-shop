@@ -29,7 +29,7 @@ exports.getProduct = (req, res, next) => {
   //     });
   //   })
   //   .catch(err => console.log(err));
-  Product.findByPk(prodId)
+  Product.findById(prodId)
     .then((product) => {
       res.render("shop/product-detail", {
         product: product,
@@ -97,7 +97,7 @@ exports.postCart = (req, res, next) => {
         return product;
       }
       // if we get no product we know it's not part of the cart yet but is in the database products table. if we're adding a new one, we have to find it first
-      return Product.findByPk(prodId); // adding a new product for the 1st time
+      return Product.findById(prodId); // adding a new product for the 1st time
     })
     .then((product) => {
       return fetchedCart.addProduct(product, {
@@ -125,7 +125,7 @@ exports.postCartDeleteProduct = (req, res, next) => {
       res.redirect("/cart");
     })
     .catch((err) => console.log(err));
-  Product.findByPk(prodId, (product) => {
+  Product.findById(prodId, (product) => {
     Cart.deleteProduct(prodId, product.price);
     res.redirect("/cart");
   });

@@ -1,18 +1,27 @@
+const mongodb = require("mongodb");
 const getDb = require("../util/database").getDb;
 
 class Product {
-  constructor(title, price, description, imageUrl) {
+  constructor(title, price, description, imageUrl, id) {
     this.title = title;
     this.price = price;
     this.description = description;
     this.imageUrl = imageUrl;
+    this._id = id ? new mongodb.ObjectID(id) : null; // in case there is no id
   }
 
   save() {
     const db = getDb(); // this gives us our connection which allows us to interact with the db
-    return db
-      .collection("products")
-      .insertOne(this)
+    let dbOp; // db operation
+    if (this._id) {
+      // update the product
+      dbOp = db
+        .collection("products")
+        .updateOne({ _id: this._id }, { $set: this });
+    } else {
+      dbOp = db.collection("products").insertOne(this);
+    }
+    return dbOp
       .then((result) => {
         console.log(result);
       })
@@ -27,13 +36,37 @@ class Product {
       .collection("products")
       .find()
       .toArray()
-      .then(products => {
+      .then((products) => {
         console.log(products);
         return products;
       })
       .catch((err) => {
         console.log(err);
       }); // find is from mongodb. to array- getsall docs and turns them into an array
+  }
+
+  static findById(prodId) {
+    const db = getDb();
+    return db
+      .collection("products")
+      .find({ _id: new mongodb.ObjectID(prodId) })
+      .next()
+      .then((product) => {
+        console.log(product);
+        return product;
+      })
+      .catch((err) => console.log(err));
+  }
+
+  static deleteById(prodId) {
+    const db = getDb(); // get access to the central db connection we configured
+    return db
+      .collection("products")
+      .deleteOne({ _id: new mongodb.ObjectID(prodId) })// deleteOne needs a filter, so we pass an object where we describe ...how to find it
+      .then(result => {
+        console.log('Deleted');
+      })
+      .catch((err) => console.log(err)); 
   }
 }
 
