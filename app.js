@@ -4,8 +4,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 
 const errorController = require("./controllers/404");
-
-const mongoConnect = require('./util/database').mongoConnect;
+const mongoConnect = require("./util/database").mongoConnect;
+const User = require("./models/user");
 
 const app = express();
 
@@ -19,7 +19,12 @@ app.use(bodyParser.urlencoded({ extended: false })); // registers a middleware
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
-  next();
+  User.findById("5ea1eaa3e552496dc014490b")
+    .then((user) => {
+      req.user = new User(user.name, user.email, user.cart, user._id);
+      next();
+    })
+    .catch((err) => console.log(err));
 });
 
 app.use("/admin", adminRoutes);
@@ -28,9 +33,9 @@ app.use(shopRoutes);
 app.use(errorController.get404);
 
 mongoConnect(() => {
+  useUnifiedTopology: true,
   app.listen(3000);
 });
-
 
 // **************** Sequelize ******************
 
@@ -63,7 +68,7 @@ mongoConnect(() => {
 // Order.belongsToMany(Product, { through: OrderItem }); // in-btwn table
 
 // sequelize // npm start runs sequelize, not incoming requests
-//   // .sync({ force: true }) 
+//   // .sync({ force: true })
 //   .sync()
 //   .then((result) => {
 //     return User.findByPk(1); // we're manually creating this for interim use

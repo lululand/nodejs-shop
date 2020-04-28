@@ -9,7 +9,7 @@ exports.getProducts = (req, res, next) => {
       res.render("shop/product-list", {
         prods: products,
         pageTitle: "All Products",
-        path: "/products"
+        path: "/products",
       });
     })
     .catch((err) => {
@@ -34,7 +34,7 @@ exports.getProduct = (req, res, next) => {
       res.render("shop/product-detail", {
         product: product,
         pageTitle: product.title,
-        path: "/products"
+        path: "/products",
       });
     })
     .catch((err) => console.log(err));
@@ -48,7 +48,7 @@ exports.getIndex = (req, res, next) => {
         // render our page in then block
         prods: products,
         pageTitle: "Shop",
-        path: "/"
+        path: "/",
       });
     })
     .catch((err) => {
@@ -57,104 +57,49 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  // console.log(req.user.cart);
   req.user
-    .getCart()
-    .then((cart) => {
-      return cart
-        .getProducts()
-        .then((products) => {
-          res.render("shop/cart", {
-            path: "/cart",
-            pageTitle: "Your Cart",
-            products: products
-          });
-        })
-        .catch((err) => console.log(err));
+    .getCart() // product references are included in the cart
+    .then((products) => {
+      res.render("shop/cart", {
+        path: "/cart",
+        pageTitle: "Your Cart",
+        products: products,
+      });
     })
     .catch((err) => console.log(err));
 };
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId;
-  let fetchedCart; // to make available to the overall function
-  let newQuantity = 1;
-  req.user
-    .getCart()
-    .then((cart) => {
-      fetchedCart = cart;
-      return cart.getProducts({ where: { id: prodId } });
-    })
-    .then((products) => {
-      let product;
-      if (products.length > 0) {
-        product = products[0];
-      }
-      if (product) {
-        // adding another product that's already in the cart, so just increment the qty
-        const oldQuantity = product.cartItem.quantity; // sqlz allows us to access this product in the in-between table
-        newQuantity = oldQuantity + 1;
-        return product;
-      }
-      // if we get no product we know it's not part of the cart yet but is in the database products table. if we're adding a new one, we have to find it first
-      return Product.findById(prodId); // adding a new product for the 1st time
-    })
+  // fetch the product we want to add
+  Product.findById(prodId)
     .then((product) => {
-      return fetchedCart.addProduct(product, {
-        through: { quantity: newQuantity }
-      });
+      return req.user.addToCart(product); // in the user model addToCart expects (product)
     })
-    .then(() => {
+    .then((result) => {
+      console.log(result);
       res.redirect("/cart");
-    })
-    .catch((err) => console.log(err));
+    });
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   req.user
-    .getCart()
-    .then((cart) => {
-      return cart.getProducts({ where: { id: prodId } });
-    })
-    .then((products) => {
-      const product = products[0];
-      product.cartItem.destroy(); // we only want to delete the item from the in-btwn table
-    })
+    .deleteItemFromCart(prodId)
     .then((result) => {
       res.redirect("/cart");
     })
     .catch((err) => console.log(err));
-  Product.findById(prodId, (product) => {
-    Cart.deleteProduct(prodId, product.price);
-    res.redirect("/cart");
-  });
+  // Product.findById(prodId, (product) => {
+  //   Cart.deleteProduct(prodId, product.price);
+  //   res.redirect("/cart");
+  // });
 };
 
 exports.postOrder = (req, res, next) => {
   let fetchedCart;
   req.user
-    .getCart()
-    .then((cart) => {
-      fetchedCart = cart;
-      return cart.getProducts();
-    })
-    .then((products) => {
-      return req.user
-        .createOrder()
-        .then((order) => {
-          return order.addProducts(
-            products.map((product) => {
-              product.orderItem = { quantity: product.cartItem.quantity }; // from order item model. each product needs to have a special key/field. this will give us a new array of products that includes both the old product data with the new info on the qty for the order. addProducts will take that info and add the products to the order with the qty
-              return product;
-            })
-          );
-        })
-        .catch((err) => console.log(err));
-    })
-    .then((result) => {
-      return fetchedCart.setProducts(null);
-    })
+    .addOrder()
     .then((result) => {
       res.redirect("/orders");
     })
@@ -163,12 +108,12 @@ exports.postOrder = (req, res, next) => {
 
 exports.getOrders = (req, res, next) => {
   req.user
-    .getOrders({include: ['products']})
+    .getOrders()
     .then((orders) => {
       res.render("shop/orders", {
         path: "/orders",
         pageTitle: "Your Orders",
-        orders: orders
+        orders: orders,
       });
     })
     .catch((err) => console.log(err));

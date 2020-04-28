@@ -16,7 +16,14 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product(title, price, description, imageUrl);
+  const product = new Product(
+    title,
+    price,
+    description,
+    imageUrl,
+    null, // we don't have the id when creating a new product
+    req.user._id // string of id of user which we store in our request via middleware - put there so we can extract the user in one central place. later we'll update this
+  );
   product
     .save()
     .then((result) => {
