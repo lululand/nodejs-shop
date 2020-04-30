@@ -1,10 +1,10 @@
-const Product = require("../models/product");
+const Product = require('../models/product');
 
 exports.getAddProduct = (req, res, next) => {
-  res.render("admin/edit-product", {
-    pageTitle: "Add Product",
-    path: "/admin/add-product", // can use 'path' for changing nav page to active class
-    editing: false, // added this since we have if/else in template
+  res.render('admin/edit-product', {
+    pageTitle: 'Add Product',
+    path: '/admin/add-product', // can use 'path' for changing nav page to active class
+    editing: false // added this since we have if/else in template
   });
 };
 
@@ -22,12 +22,14 @@ exports.postAddProduct = (req, res, next) => {
   });
   product
     .save() // mongoose provides save method
-    .then((result) => {  // mongoose also gives us a then method
+    .then(result => {
+      // mongoose also gives us a then method
       // console.log(result);
-      console.log("Created Product");
-      res.redirect("/admin/products");
+      console.log('Created Product');
+      res.redirect('/admin/products');
     })
-    .catch((err) => {  // ditto catch
+    .catch(err => {
+      // ditto catch
       console.log(err);
     });
 };
@@ -35,24 +37,24 @@ exports.postAddProduct = (req, res, next) => {
 exports.getEditProduct = (req, res, next) => {
   const editMode = req.query.edit; // query object managed by express. edit is the key in the query param ?edit=true and if set in the req then we'll get the value, if not we'll get undefined which = false
   if (!editMode) {
-    return res.redirect("/");
+    return res.redirect('/');
   }
   const prodId = req.params.productId; // we can retrieve this from the incoming request - it is set in the route admin.js
   Product.findById(prodId)
     // Product.findById(prodId)
-    .then((product) => {
+    .then(product => {
       if (!product) {
         // if it's undefined then return redirect
-        return res.redirect("/"); // normally better to show an error
+        return res.redirect('/'); // normally better to show an error
       }
-      res.render("admin/edit-product", {
-        pageTitle: "Edit Product",
-        path: "/admin/edit-product",
+      res.render('admin/edit-product', {
+        pageTitle: 'Edit Product',
+        path: '/admin/edit-product',
         editing: editMode, // now we only enter edit mode if this is set as true and can use 'editing' key in our template
-        product: product, // passing our product on a 'product' key, can use in template to pre-populate the page fields
+        product: product // passing our product on a 'product' key, can use in template to pre-populate the page fields
       });
     })
-    .catch((err) => console.log(err));
+    .catch(err => console.log(err));
 };
 
 exports.postEditProduct = (req, res, next) => {
@@ -64,7 +66,7 @@ exports.postEditProduct = (req, res, next) => {
   const updatedDescription = req.body.description;
 
   Product.findById(prodId)
-    .then((product) => {
+    .then(product => {
       // gives us a full mg object
       product.title = updatedTitle;
       product.price = updatedPrice;
@@ -72,36 +74,36 @@ exports.postEditProduct = (req, res, next) => {
       product.imageUrl = updatedImageUrl;
       return product.save(); // if it exists changes will be saved, so auto update it
     })
-    .then((result) => {
-      console.log("updated product");
-      res.redirect("/admin/products");
+    .then(result => {
+      console.log('updated product');
+      res.redirect('/admin/products');
     })
-    .catch((err) => console.log(err)); // catches errors for both .thens
+    .catch(err => console.log(err)); // catches errors for both .thens
 };
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId; // we can access the productId from the edit-product page via the hidden input field that we named productId
   Product.findByIdAndRemove(prodId) // mg method
     .then(() => {
-      console.log("destroyed product");
-      res.redirect("/admin/products");
+      console.log('destroyed product');
+      res.redirect('/admin/products');
     }) // this will execute once the destroy succeeded
-    .catch((err) => console.log(err));
+    .catch(err => console.log(err));
 };
 
 exports.getProducts = (req, res, next) => {
   Product.find()
     // .select("title price -_id")
-    // .populate("userId", "name") // tells mongoose to populate a field with all the info and not just the id 
-    .then((products) => {
+    // .populate("userId", "name") // tells mongoose to populate a field with all the info and not just the id
+    .then(products => {
       // console.log(products);
-      res.render("admin/products", {
+      res.render('admin/products', {
         prods: products,
-        pageTitle: "Admin Products",
-        path: "/admin/products",
+        pageTitle: 'Admin Products',
+        path: '/admin/products'
       });
     })
-    .catch((err) => console.log(err));
+    .catch(err => console.log(err));
 };
 
 // *****************************************
@@ -168,8 +170,6 @@ exports.getProducts = (req, res, next) => {
 //     }) // this will execute once the destroy succeeded
 //     .catch((err) => console.log(err));
 // };
-
-
 
 // *****************************************
 //  ********** with sequelize **************

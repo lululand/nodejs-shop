@@ -1,22 +1,22 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
   name: {
     type: String,
-    required: true,
+    required: true
   },
   email: {
     type: String,
-    required: true,
+    required: true
   },
   cart: {
     items: [
       {
         productId: {
           type: Schema.Types.ObjectId,
-          ref: "Product", // making relations
+          ref: 'Product', // making relations
           required: true
         },
         quantity: { type: Number, required: true }
@@ -27,33 +27,71 @@ const userSchema = new Schema({
 
 // the mg methods key is an object that allows us to add our own methods
 // with our own logic
-userSchema.methods.addToCart = function(product) {
-  const cartProductIndex = this.cart.items.findIndex((cp) => {
+userSchema.methods.addToCart = function (product) {
+  const cartProductIndex = this.cart.items.findIndex(cp => {
     return cp.productId.toString() === product._id.toString(); // if true product exists in cart
   });
   let newQuantity = 1; // if not in the cart we give it a default of 1
   const updatedCartItems = [...this.cart.items];
 
-  if (cartProductIndex >= 0) { // if item is already in cart, update qty
+  if (cartProductIndex >= 0) {
+    // if item is already in cart, update qty
     newQuantity = this.cart.items[cartProductIndex].quantity + 1;
     updatedCartItems[cartProductIndex].quantity = newQuantity;
   } else {
-    updatedCartItems.push({ // if item not there, add to the array w/ push
+    updatedCartItems.push({
+      // if item not there, add to the array w/ push
       productId: product._id, // mg will store in object id
       quantity: newQuantity // make sure key names match userSchema above
-    }); 
+    });
   }
-  const updatedCart = { // create object which holds items property array
-    items: updatedCartItems,
+  const updatedCart = {
+    // create object which holds items property array
+    items: updatedCartItems
   };
   this.cart = updatedCart;
   return this.save();
 };
 
-module.exports = mongoose.model("User", userSchema);
+userSchema.methods.getCart = function (products) {
+  const productIds = this.cart.items.map(i => {
+    return i.productId;
+  });
+  return db
+    .collection('products')
+    .find({ _id: { $in: productIds } })
+    .toArray()
+    .then(products => {
+      // array of products returned from db. we want to add the qty back
+      return products.map(p => {
+        // map takes a function which transforms every element in the array
+        return {
+          // returning a new object
+          ...p, // which has all the old product properties
+          quantity: this.cart.items.find(i => {
+            // plus add a new qty prop
+            return i.productId.toString() === p._id.toString(); // to get the right qty we reach out to users cart items - find item with id = to the product just fetched from db
+          }).quantity // from the cart items, extract the qty for that product
+        };
+      });
+    });
+};
+
+userSchema.methods.removeFromCart = function (productId) {
+  const updatedCartItems = this.cart.items.filter(item => {
+    return item.productId.toString() !== productId.toString();
+  });
+  this.cart.items = updatedCartItems;
+  return this.save();
+};
+
+userSchema.methods.clearCart = function() {
+  this.cart = {items: []};
+  return this.save();
+};
 
 
-
+module.exports = mongoose.model('User', userSchema);
 
 // *****************************************
 // ************** MongoDB ******************
