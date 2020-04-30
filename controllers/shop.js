@@ -3,8 +3,9 @@ const Cart = require("../models/cart");
 // const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
+  Product.find() // doesn't give us a cursor, but all the products
     .then((products) => {
+      console.log(products);
       // products list array
       res.render("shop/product-list", {
         prods: products,
@@ -17,20 +18,10 @@ exports.getProducts = (req, res, next) => {
     });
 };
 
-// in the first method below, even though we're searching for one id, since it's a findAll method it returns an array, so we need [0]
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
-  // Product.findAll({ where: { id: prodId } })
-  //   .then((products) => {
-  //     res.render("shop/product-detail", {
-  //       product: products[0],
-  //       pageTitle: products[0].title,
-  //       path: "/products"
-  //     });
-  //   })
-  //   .catch(err => console.log(err));
-  Product.findById(prodId)
-    .then((product) => {
+  Product.findById(prodId)  // findById is definied by mongoose. we can pass a string and mg will auto convert it to an object id
+    .then((product) => { 
       res.render("shop/product-detail", {
         product: product,
         pageTitle: product.title,
@@ -41,7 +32,7 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.fetchAll()
+  Product.find()
     .then((products) => {
       // products list array
       res.render("shop/index", {
@@ -74,7 +65,7 @@ exports.postCart = (req, res, next) => {
   // fetch the product we want to add
   Product.findById(prodId)
     .then((product) => {
-      return req.user.addToCart(product); // in the user model addToCart expects (product)
+      return req.user.addToCart(product); // we added the addToCart method in our user model 
     })
     .then((result) => {
       console.log(result);
@@ -118,3 +109,64 @@ exports.getOrders = (req, res, next) => {
     })
     .catch((err) => console.log(err));
 };
+
+
+
+
+// *****************************************
+// ************** MongoDB ******************
+// *****************************************
+
+// exports.getProducts = (req, res, next) => {
+  //   Product.fetchAll()
+  //     .then((products) => {
+  //       // products list array
+  //       res.render("shop/product-list", {
+  //         prods: products,
+  //         pageTitle: "All Products",
+  //         path: "/products",
+  //       });
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //     });
+  // };
+
+// in the first method below, even though we're searching for one id, since it's a findAll method it returns an array, so we need [0]
+// exports.getProduct = (req, res, next) => {
+//   const prodId = req.params.productId;
+// Product.findAll({ where: { id: prodId } })
+//   .then((products) => {
+//     res.render("shop/product-detail", {
+//       product: products[0],
+//       pageTitle: products[0].title,
+//       path: "/products"
+//     });
+//   })
+//   .catch(err => console.log(err));
+//   Product.findById(prodId)  
+//     .then((product) => {
+//       res.render("shop/product-detail", {
+//         product: product,
+//         pageTitle: product.title,
+//         path: "/products",
+//       });
+//     })
+//     .catch((err) => console.log(err));
+// };
+  
+// exports.getIndex = (req, res, next) => {
+//   Product.fetchAll()
+//     .then((products) => {
+//       // products list array
+//       res.render("shop/index", {
+//         // render our page in then block
+//         prods: products,
+//         pageTitle: "Shop",
+//         path: "/",
+//       });
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//     });
+// };

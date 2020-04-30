@@ -2,9 +2,10 @@ const path = require("path");
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 
 const errorController = require("./controllers/404");
-const mongoConnect = require("./util/database").mongoConnect;
+
 const User = require("./models/user");
 
 const app = express();
@@ -19,9 +20,9 @@ app.use(bodyParser.urlencoded({ extended: false })); // registers a middleware
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
-  User.findById("5ea1eaa3e552496dc014490b")
+  User.findById("5ea9e95e60aab73e749f8171")
     .then((user) => {
-      req.user = new User(user.name, user.email, user.cart, user._id);
+      req.user = user; // this is a full mg model so we can call all the mg methods on it
       next();
     })
     .catch((err) => console.log(err));
@@ -32,11 +33,53 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect(() => {
-  useUnifiedTopology: true,
-  app.listen(3000);
-});
+mongoose
+  .connect(
+    "mongodb+srv://kirsten:rs9w8dh9vB1Cd3Nw@cluster0-zvwh9.mongodb.net/shop?retryWrites=true"
+  )
+  .then((result) => { 
+    User.findOne().then(user => { // findOne w/ no args gets 1st user it finds
+      if (!user) {
+        const user = new User({ // create a user before we start listening
+          name: "kirsten",
+          email: "kirsten@kl.com",
+          cart: {
+            items: []
+          }
+        });
+      }
+      user.save();
+    }); 
+    app.listen(3000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
 
+
+
+
+// *******************************************  
+// **************** MongoDb ******************
+// const mongoConnect = require("./util/database").mongoConnect;
+
+// mongoConnect(() => {
+//   useUnifiedTopology: true,
+//   app.listen(3000);
+// });
+
+// app.use((req, res, next) => {
+//   User.findById("5ea9e838a034a871e000f15b")
+//     .then((user) => {
+//       req.user = new User(user.name, user.email, user.cart, user._id);
+//       next();
+//     })
+//     .catch((err) => console.log(err));
+// });
+
+
+
+// *******************************************
 // **************** Sequelize ******************
 
 // const sequelize = require("./util/database");

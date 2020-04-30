@@ -1,137 +1,170 @@
-const mongodb = require("mongodb");
-const getDb = require("../util/database").getDb;
 
-class Product {
-  constructor(title, price, description, imageUrl, id, userId) {
-    this.title = title;
-    this.price = price;
-    this.description = description;
-    this.imageUrl = imageUrl;
-    this._id = id ? new mongodb.ObjectID(id) : null; // in case there is no id
-    this.userId = userId;
+const mongoose = require('mongoose');
+
+const Schema = mongoose.Schema;
+
+const productSchema = new Schema({ // define a schema for our data structure even though we have the flexibility to deviate from that
+  title: {
+    type: String, // String is a default JS object.
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  imageUrl: {
+    type: String,
+    required: true
+  },
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User', // use the name of the model we want to relate to
+    required: true
   }
+});
 
-  save() {
-    const db = getDb(); // this gives us our connection which allows us to interact with the db
-    let dbOp; // db operation
-    if (this._id) {
-      // update the product
-      dbOp = db
-        .collection("products")
-        .updateOne({ _id: this._id }, { $set: this });
-    } else {
-      dbOp = db.collection("products").insertOne(this);
-    }
-    return dbOp
-      .then((result) => {
-        console.log(result);
-      })
-      .catch((err) => {
-        console.log(err);
-      }); // table ;equivalent - if it doesn't exist yet, mongodb will create it the first time we insert data
-  }
+module.exports = mongoose.model('Product', productSchema); // connecting our schema/blueprint with a name. Mongoose takes the model name ('Product') and turns it lower case and plural for the db collection name ('products')
 
-  static fetchAll() {
-    const db = getDb();
-    return db
-      .collection("products")
-      .find()
-      .toArray()
-      .then((products) => {
-        console.log(products);
-        return products;
-      })
-      .catch((err) => {
-        console.log(err);
-      }); // find is from mongodb. to array- getsall docs and turns them into an array
-  }
 
-  static findById(prodId) {
-    const db = getDb();
-    return db
-      .collection("products")
-      .find({ _id: new mongodb.ObjectID(prodId) })
-      .next()
-      .then((product) => {
-        console.log(product);
-        return product;
-      })
-      .catch((err) => console.log(err));
-  }
+// ********** MongoDb ********** //
+// const mongodb = require("mongodb");
+// const getDb = require("../util/database").getDb;
 
-  static deleteById(prodId) {
-    const db = getDb(); // get access to the central db connection we configured
-    return db
-      .collection("products")
-      .deleteOne({ _id: new mongodb.ObjectID(prodId) })// deleteOne needs a filter, so we pass an object where we describe ...how to find it
-      .then(result => {
-        console.log('Deleted');
-      })
-      .catch((err) => console.log(err)); 
-  }
-}
-
-module.exports = Product;
-
-// **************************************************
-// ********** with sequelize **********
-// **************************************************
-
-// const Sequelize = require("sequelize").Sequelize;
-
-// const sequelize = require("../util/database"); // importing what we exported in our database.js. this is a fully configured sequelize env
-
-// const Product = sequelize.define("product", {
-//   id: {
-//     type: Sequelize.INTEGER,
-//     autoIncrement: true,
-//     allowNull: false,
-//     primaryKey: true,
-//   },
-//   title: Sequelize.STRING,
-//   price: {
-//     type: Sequelize.DOUBLE,
-//     allowNull: false,
-//   },
-//   imageUrl: {
-//     type: Sequelize.STRING,
-//     allowNull: false,
-//   },
-//   description: {
-//     type: Sequelize.STRING,
-//     allowNull: false,
-//   },
-// });
-
-// **************************************************
-// ********** without sequelize **********
-// **************************************************
-// const db = require('../util/database.js');
-// const Cart = require("./cart");
-
-// module.exports = class Product {
-//   constructor(id, title, imageURL, description, price) {
-//     this.id = id;
+// class Product {
+//   constructor(title, price, description, imageUrl, id, userId) {
 //     this.title = title;
-//     this.imageURL = imageURL;
-//     this.description = description;
 //     this.price = price;
+//     this.description = description;
+//     this.imageUrl = imageUrl;
+//     this._id = id ? new mongodb.ObjectID(id) : null; // in case there is no id
+//     this.userId = userId;
 //   }
 
 //   save() {
-//     return db.execute('INSERT INTO products (title, price, imageURL, description) VALUES (?, ?, ?, ?)', [this.title, this.price, this.imageURL, this.description]); // db gives the access to the db connection pool. don't need to specify id because that will be generated by the db
-//   }
-
-//   static deleteById(id) {
-
+//     const db = getDb(); // this gives us our connection which allows us to interact with the db
+//     let dbOp; // db operation
+//     if (this._id) {
+//       // update the product
+//       dbOp = db
+//         .collection("products")
+//         .updateOne({ _id: this._id }, { $set: this });
+//     } else {
+//       dbOp = db.collection("products").insertOne(this);
+//     }
+//     return dbOp
+//       .then((result) => {
+//         console.log(result);
+//       })
+//       .catch((err) => {
+//         console.log(err);
+//       }); // table ;equivalent - if it doesn't exist yet, mongodb will create it the first time we insert data
 //   }
 
 //   static fetchAll() {
-//     return db.execute('SELECT * FROM products');
-//     // getProductsFromFile(cb);
+//     const db = getDb();
+//     return db
+//       .collection("products")
+//       .find()
+//       .toArray()
+//       .then((products) => {
+//         console.log(products);
+//         return products;
+//       })
+//       .catch((err) => {
+//         console.log(err);
+//       }); // find is from mongodb. to array- getsall docs and turns them into an array
 //   }
 
-//   static findById(id) {
-//     return db.execute('SELECT * FROM products WHERE products.id = ?', [id]);
+//   static findById(prodId) {
+//     const db = getDb();
+//     return db
+//       .collection("products")
+//       .find({ _id: new mongodb.ObjectID(prodId) })
+//       .next()
+//       .then((product) => {
+//         console.log(product);
+//         return product;
+//       })
+//       .catch((err) => console.log(err));
 //   }
-// };
+
+//   static deleteById(prodId) {
+//     const db = getDb(); // get access to the central db connection we configured
+//     return db
+//       .collection("products")
+//       .deleteOne({ _id: new mongodb.ObjectID(prodId) })// deleteOne needs a filter, so we pass an object where we describe ...how to find it
+//       .then(result => {
+//         console.log('Deleted');
+//       })
+//       .catch((err) => console.log(err)); 
+//   }
+// }
+
+// module.exports = Product;
+
+// // **************************************************
+// // ********** with sequelize **********
+// // **************************************************
+
+// // const Sequelize = require("sequelize").Sequelize;
+
+// // const sequelize = require("../util/database"); // importing what we exported in our database.js. this is a fully configured sequelize env
+
+// // const Product = sequelize.define("product", {
+// //   id: {
+// //     type: Sequelize.INTEGER,
+// //     autoIncrement: true,
+// //     allowNull: false,
+// //     primaryKey: true,
+// //   },
+// //   title: Sequelize.STRING,
+// //   price: {
+// //     type: Sequelize.DOUBLE,
+// //     allowNull: false,
+// //   },
+// //   imageUrl: {
+// //     type: Sequelize.STRING,
+// //     allowNull: false,
+// //   },
+// //   description: {
+// //     type: Sequelize.STRING,
+// //     allowNull: false,
+// //   },
+// // });
+
+// // **************************************************
+// // ********** without sequelize **********
+// // **************************************************
+// // const db = require('../util/database.js');
+// // const Cart = require("./cart");
+
+// // module.exports = class Product {
+// //   constructor(id, title, imageURL, description, price) {
+// //     this.id = id;
+// //     this.title = title;
+// //     this.imageURL = imageURL;
+// //     this.description = description;
+// //     this.price = price;
+// //   }
+
+// //   save() {
+// //     return db.execute('INSERT INTO products (title, price, imageURL, description) VALUES (?, ?, ?, ?)', [this.title, this.price, this.imageURL, this.description]); // db gives the access to the db connection pool. don't need to specify id because that will be generated by the db
+// //   }
+
+// //   static deleteById(id) {
+
+// //   }
+
+// //   static fetchAll() {
+// //     return db.execute('SELECT * FROM products');
+// //     // getProductsFromFile(cb);
+// //   }
+
+// //   static findById(id) {
+// //     return db.execute('SELECT * FROM products WHERE products.id = ?', [id]);
+// //   }
+// // };
