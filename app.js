@@ -1,65 +1,69 @@
-const path = require("path");
+const path = require('path');
 
-const express = require("express");
-const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const session = require('express-session');
 
-const errorController = require("./controllers/404");
+const errorController = require('./controllers/404');
 
-const User = require("./models/user");
+const User = require('./models/user');
 
 const app = express();
 
-app.set("view engine", "ejs");
-app.set("views", "views"); // this is the default, so you only need to include this if you have your views in a different dir
+app.set('view engine', 'ejs');
+app.set('views', 'views'); // this is the default, so you only need to include this if you have your views in a different dir
 
-const adminRoutes = require("./routes/admin"); // imports the admin.js, adminRoutes is a valid middleware function. incoming requests are funneled through middleware
-const shopRoutes = require("./routes/shop");
+const adminRoutes = require('./routes/admin'); // imports the admin.js, adminRoutes is a valid middleware function. incoming requests are funneled through middleware
+const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
 
-app.use(bodyParser.urlencoded({ extended: false })); // registers a middleware
-app.use(express.static(path.join(__dirname, "public")));
+// registering middleware
+app.use(bodyParser.urlencoded({ extended: false })); 
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({secret: 'my secret', resave: false, saveUninitialized: false})); // saveUninitialized ensures a session isn't saved where it doesn't need to be. you can also configure the cookie, we're going with the default settings
 
 app.use((req, res, next) => {
-  User.findById("5ea9e95e60aab73e749f8171")
-    .then((user) => {
+  User.findById('5ea9e95e60aab73e749f8171')
+    .then(user => {
       req.user = user; // this is a full mg model so we can call all the mg methods on it
       next();
     })
-    .catch((err) => console.log(err));
+    .catch(err => console.log(err));
 });
 
-app.use("/admin", adminRoutes);
+app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
 app.use(errorController.get404);
 
 mongoose
   .connect(
-    "mongodb+srv://kirsten:rs9w8dh9vB1Cd3Nw@cluster0-zvwh9.mongodb.net/shop?retryWrites=true"
+    'mongodb+srv://kirsten:rs9w8dh9vB1Cd3Nw@cluster0-zvwh9.mongodb.net/shop?retryWrites=true'
   )
-  .then((result) => { 
-    User.findOne().then(user => { // findOne w/ no args gets 1st user it finds
+  .then(result => {
+    User.findOne().then(user => {
+      // findOne w/ no args gets 1st user it finds
       if (!user) {
-        const user = new User({ // create a user before we start listening
-          name: "kirsten",
-          email: "kirsten@kl.com",
+        const user = new User({
+          // create a user before we start listening
+          name: 'kirsten',
+          email: 'kirsten@kl.com',
           cart: {
             items: []
           }
         });
       }
       user.save();
-    }); 
+    });
     app.listen(3000);
   })
-  .catch((err) => {
+  .catch(err => {
     console.log(err);
   });
 
-
-
-
-// *******************************************  
+// *******************************************
 // **************** MongoDb ******************
 // const mongoConnect = require("./util/database").mongoConnect;
 
@@ -76,8 +80,6 @@ mongoose
 //     })
 //     .catch((err) => console.log(err));
 // });
-
-
 
 // *******************************************
 // **************** Sequelize ******************

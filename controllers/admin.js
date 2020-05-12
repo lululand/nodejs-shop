@@ -4,7 +4,8 @@ exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product', // can use 'path' for changing nav page to active class
-    editing: false // added this since we have if/else in template
+    editing: false, // added this since we have if/else in template
+    isAuthenticated: req.isLoggedIn 
   });
 };
 
@@ -51,7 +52,8 @@ exports.getEditProduct = (req, res, next) => {
         pageTitle: 'Edit Product',
         path: '/admin/edit-product',
         editing: editMode, // now we only enter edit mode if this is set as true and can use 'editing' key in our template
-        product: product // passing our product on a 'product' key, can use in template to pre-populate the page fields
+        product: product, // passing our product on a 'product' key, can use in template to pre-populate the page fields
+        isAuthenticated: req.isLoggedIn
       });
     })
     .catch(err => console.log(err));
@@ -100,7 +102,8 @@ exports.getProducts = (req, res, next) => {
       res.render('admin/products', {
         prods: products,
         pageTitle: 'Admin Products',
-        path: '/admin/products'
+        path: '/admin/products',
+        isAuthenticated: req.isLoggedIn
       });
     })
     .catch(err => console.log(err));
